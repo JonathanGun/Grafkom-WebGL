@@ -48,6 +48,7 @@ function clear(){
   numDots = [0];
   start = [0];
   type = [];
+  shapes = [];
   mode = "draw";
   console.log("Canvas cleared!");
 }
@@ -56,6 +57,8 @@ function readFile(inp){
   readFileContent(inp.files[0]).then(jsonData => {
     jsonData = JSON.parse(jsonData);
     console.log("File content:", jsonData);
+
+    shapes = jsonData;
     
     var startIdxTmp = 0;
     jsonData.forEach((shape, i) => {
@@ -71,7 +74,7 @@ function readFile(inp){
     })
     index = startIdxTmp;
     numShapes = jsonData.length;
-    
+
     console.log("File loaded!");
   }).catch(error => console.log(error));
 }
