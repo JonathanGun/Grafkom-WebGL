@@ -20,7 +20,7 @@
       </canvas>
     </div>
     <div>
-      Draw
+      Draw a:
       <select id="type" size="5">
         <option value="line" selected>Line</option>
         <option value="square">Square</option>
@@ -32,8 +32,19 @@
       <button id="clearButton">Clear</button>
     </div>
     <div>
-      <input id="data-file" type="file" accept="text/plain" onchange="readFile(this)" />
-      <button id="downloadButton">Download</button>
+      Load drawing: <input id="data-file" type="file" accept="text/plain" onchange="readFile(this)" />
+    </div>
+    <div>
+      Save drawing as: <input id="file-name" type="text" value="mydrawing"/>.txt
+      <button id="downloadButton">Download save file</button>
+    </div>
+    <hr>
+    <div>
+      Selected dot:
+      <div>
+        Shape: <span id="selected-shape"></span><br>
+        N-th Dot (1-based): <span id="selected-idx"></span><br>
+      </div>
     </div>
   </body>
 </html>

@@ -25,10 +25,10 @@ var typeMap;
 var index;
 var numShapes;
 var numDots;
+var editedDotIdx;
 
-// float
-var startX;
-var startY;
+// vec2
+var startXY;
 
 // array
 var start;
@@ -49,34 +49,35 @@ function clear(){
   start = [0];
   type = [];
   shapes = [];
+  editedDotIdx = vec2(-1, -1);
   mode = "draw";
   console.log("Canvas cleared!");
 }
 
+// load and save
 function readFile(inp){
   readFileContent(inp.files[0]).then(jsonData => {
-    jsonData = JSON.parse(jsonData);
-    console.log("File content:", jsonData);
-
-    shapes = jsonData;
-    
-    var startIdxTmp = 0;
-    jsonData.forEach((shape, i) => {
-      type[i] = shape.type;
-      start[i] = startIdxTmp;
-      numDots[i] = shape.numDot;
-      
-      shape.dots.forEach((dot, i) => {
-        insertDot(startIdxTmp, vec2(dot));
-        insertColor(startIdxTmp, vec4(shape.color));
-        startIdxTmp++;
-      })
-    })
-    index = startIdxTmp;
-    numShapes = jsonData.length;
-
+    shapes = JSON.parse(jsonData);
+    loadToBuffer();
+    numShapes = shapes.length;
     console.log("File loaded!");
   }).catch(error => console.log(error));
+}
+
+function loadToBuffer(){
+  var startIdxTmp = 0;
+  shapes.forEach((shape, i) => {
+    type[i] = shape.type;
+    start[i] = startIdxTmp;
+    numDots[i] = shape.dots.length;
+    
+    shape.dots.forEach((dot, i) => {
+      insertDot(startIdxTmp, vec2(dot));
+      insertColor(startIdxTmp, vec4(shape.color));
+      startIdxTmp++;
+    })
+  })
+  index = startIdxTmp;
 }
 
 function readFileContent(file) {
@@ -96,6 +97,7 @@ function download(content, fileName, contentType) {
   a.click();
 }
 
+// webgl buffer
 function insertDot(index, mouseXY){
   gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
   gl.bufferSubData(gl.ARRAY_BUFFER, 8 * index, flatten(mouseXY));
@@ -104,6 +106,15 @@ function insertDot(index, mouseXY){
 function insertColor(index, c){
   gl.bindBuffer(gl.ARRAY_BUFFER, cBufferId);
   gl.bufferSubData(gl.ARRAY_BUFFER, 16 * index, flatten(c));
+}
+
+// math helper
+function distance(u, v){
+  return length(subtract(u, v));
+}
+
+function closeEnough(u, v){
+  return distance(u, v) <= epsilon;
 }
 
 window.onload = function init() {
@@ -146,7 +157,7 @@ window.onload = function init() {
 
   var downloadButton = document.getElementById("downloadButton");
   downloadButton.addEventListener("click", function() {
-    download(JSON.stringify(shapes), 'json.txt', 'text/plain');
+    download(JSON.stringify(shapes), document.getElementById("file-name").value + ".txt", 'text/plain');
   });
 
   // Canvas listeners
@@ -154,42 +165,41 @@ window.onload = function init() {
     mouseClicked = true;
     var mouseX = 2 * event.clientX / canvas.width - 1;
     var mouseY = 2 * (canvas.height - event.clientY) / canvas.height - 1;
+    let mouse = vec2(mouseX, mouseY);
+
 
     if(mode == "draw"){
       if(typeValue == "line"){
         console.log("Now drawing line");
 
-        type[numShapes] = typeValue;
-        numDots[numShapes] = 2;
-        start[numShapes] = index;
-        startX = mouseX;
-        startY = mouseY;
-        
-        // init line
-        insertDot(index, vec2(startX, startY));
-        insertDot(index+1, vec2(startX, startY));
+        startXY = mouse;
+        shapes[numShapes] = {
+          "type": "line",
+          "dots": [startXY, startXY],
+          "color": vec4(colors[0]),
+        }
       } else if(typeValue == "square"){
         console.log("Now drawing line");
         
-        type[numShapes] = typeValue;
-        numDots[numShapes] = 4;
-        start[numShapes] = index;
-        startX = mouseX;
-        startY = mouseY;
-
-        // init square
-        insertDot(index, vec2(startX, startY));
-        insertDot(index+1, vec2(startX, startY));
-        insertDot(index+2, vec2(startX, startY));
-        insertDot(index+3, vec2(startX, startY));
+        startXY = mouse;
+        shapes[numShapes] = {
+          "type": "square",
+          "dots": [startXY, startXY, startXY, startXY],
+          "color": vec4(colors[0]),
+        }
       } else if(typeValue == "polygon"){
         // do nothing, harus di klik klik
       }
     } else if (mode == "edit"){
-      // TODO
-      // if item held = dot, masukin ke variabel
-      
-      // else (misal sisi nya) do nothing -> karena bukan di drag tapi di klik
+      editedDotIdx = vec2(-1, -1);
+      shapes.forEach((shape, i) => {
+        shape.dots.forEach((dot, j) => {
+          var dist = distance(mouse, vec2(dot));
+          if(dist < epsilon * 10){
+            editedDotIdx = vec2(i, j);
+          }
+        })
+      })
     } else if (mode == "delete"){
       // TODO do nothing kalau di drag
     }
@@ -209,14 +219,20 @@ window.onload = function init() {
   
   canvas.addEventListener("mouseup", function(event){
     mouseClicked = false;
+    var mouseX = 2 * event.clientX / canvas.width - 1;
+    var mouseY = 2 * (canvas.height - event.clientY) / canvas.height - 1;
+    var mouse = vec2(mouseX, mouseY);
 
     if(mode == "draw"){
       if(typeValue == "line"){
-        numShapes++;
-        index+=2;
+        if(!closeEnough(mouse, startXY)){
+          numShapes++;
+          index += 2;
+        }
       } else if(typeValue == "square"){
         // TODO kalo uda jadi diuncomment:
         // numShapes++;
+        // index += 4;
       } else if(typeValue == "polygon"){
         // do nothing, harus di klik klik
       }
@@ -224,41 +240,34 @@ window.onload = function init() {
   });
   
   canvas.addEventListener("mousemove", function(event) {
+    var mouseX = 2 * event.clientX / canvas.width - 1;
+    var mouseY = 2 * (canvas.height - event.clientY) / canvas.height - 1;
+    var mouse = vec2(mouseX, mouseY);
+    
     if(mouseClicked){
       if(mode == "draw"){
-        var mouseX = 2 * event.clientX / canvas.width - 1;
-        var mouseY = 2 * (canvas.height - event.clientY) / canvas.height - 1;
         if(typeValue == "line"){
-          if(Math.abs(mouseX-startX) > epsilon){
-            insertDot(index, vec2(startX, startY));
-            insertDot(index+1, vec2(mouseX, mouseY));
-            
-            // default black line
-            insertColor(index, vec4(colors[0]));
-            insertColor(index+1, vec4(colors[0]));
-
+          if(!closeEnough(mouse, startXY)){
             shapes[numShapes] = {
               "type": "line",
-              "numDot": 2,
-              "dots": [vec2(startX, startY), vec2(mouseX, mouseY)],
+              "dots": [startXY, mouse],
               "color": vec4(colors[0]),
             }
           }
         } else if(typeValue == "square"){
           if(Math.abs(mouseX-startX) > epsilon){
-            insertDot(index, vec2(startX, startY));
-            // TODO hitung 3 node lainnya, insert ke index+1, index+2, sama index+3
-            insertColor(index, vec4(colors[0]));
-            // TODO jangan lupa insert colornya
+            // TODO hitung 3 titik lainnya, masukin ke array shapes[numShapes], jangan lupa colornya
           }
         } else if(typeValue == "polygon"){
           // do nothing, polygon gabisa didrag
         }
         
       } else if (mode == "edit") {
-        // TODO pindahin dot nya
+        if(!(equal(editedDotIdx, vec2(-1, -1)))){
+          shapes[editedDotIdx[0]].dots[editedDotIdx[1]] = mouse;
+        }
       } else if (mode == "delete"){
-        // TODO do nothing
+        // do nothing
       }
     }
   });
@@ -295,11 +304,28 @@ window.onload = function init() {
 function render() {
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  for (var i = 0; i <= numShapes; i++) {
+  loadToBuffer();
+  
+  // if lagi ngegambar, show gambar saat ini
+  var tmp = mouseClicked?(numShapes+1):(numShapes);
+  for (var i = 0; i < tmp; i++) {
     gl.drawArrays(gl.POINTS, start[i], numDots[i]);
   }
-  for (var i = 0; i <= numShapes; i++) {
-    gl.drawArrays(typeMap[type[i]], start[i], numDots[i]);
+  for (var i = 0; i < tmp; i++) {
+    // if currently drawing polygon and not finished, show as line strip
+    if(mouseClicked && i == tmp-1 && type[i] == "polygon"){
+      gl.drawArrays(gl.LINE_STRIP, start[i], numDots[i]);
+    } else {
+      gl.drawArrays(typeMap[type[i]], start[i], numDots[i]);
+    }
+  }
+
+  if(mouseClicked && !equal(editedDotIdx, vec2(-1, -1))){
+    document.getElementById("selected-shape").innerHTML = shapes[editedDotIdx[0]].type;
+    document.getElementById("selected-idx").innerHTML = editedDotIdx[1] + 1;
+  } else {
+    document.getElementById("selected-shape").innerHTML = "";
+    document.getElementById("selected-idx").innerHTML = "";
   }
 
   setTimeout(
