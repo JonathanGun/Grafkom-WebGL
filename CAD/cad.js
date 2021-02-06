@@ -240,6 +240,9 @@ function render() {
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   for (var i = 0; i <= numShapes; i++) {
+    gl.drawArrays(gl.POINTS, start[i], numDots[i]);
+  }
+  for (var i = 0; i <= numShapes; i++) {
     gl.drawArrays(typeMap[type[i]], start[i], numDots[i]);
   }
 
