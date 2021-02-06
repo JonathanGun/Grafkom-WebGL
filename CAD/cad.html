@@ -22,7 +22,7 @@
     <div>
       Draw
       <select id="type" size="5">
-        <option value="line">Line</option>
+        <option value="line" selected>Line</option>
         <option value="square">Square</option>
         <option value="polygon">Polygon</option>
       </select>
@@ -30,6 +30,10 @@
       <button id="helpButton">Help</button>
       <button id="deleteButton">Delete</button>
       <button id="clearButton">Clear</button>
+    </div>
+    <div>
+      <input id="data-file" type="file" accept="text/plain" onchange="readFile(this)" />
+      <button id="downloadButton">Download</button>
     </div>
   </body>
 </html>

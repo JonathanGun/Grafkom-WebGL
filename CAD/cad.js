@@ -23,9 +23,10 @@ var typeMap;
 
 // int
 var index;
-var typeValue;
 var numShapes;
 var numDots;
+
+// float
 var startX;
 var startY;
 
@@ -34,7 +35,10 @@ var start;
 var type;
 
 // string
-var mode; // draw, edit, delete, null
+var mode = "draw"; // draw, edit, delete, null
+var typeValue = "line"; // line, square, polygon
+
+var shapes = [];
 
 var mouseClicked = false;
 
@@ -48,9 +52,45 @@ function clear(){
   console.log("Canvas cleared!");
 }
 
-function readFile(){
-  // TODO
-  // baca dari file: warna, titik, dll
+function readFile(inp){
+  readFileContent(inp.files[0]).then(jsonData => {
+    jsonData = JSON.parse(jsonData);
+    console.log("File content:", jsonData);
+    
+    var startIdxTmp = 0;
+    jsonData.forEach((shape, i) => {
+      type[i] = shape.type;
+      start[i] = startIdxTmp;
+      numDots[i] = shape.numDot;
+      
+      shape.dots.forEach((dot, i) => {
+        insertDot(startIdxTmp, vec2(dot));
+        insertColor(startIdxTmp, vec4(shape.color));
+        startIdxTmp++;
+      })
+    })
+    index = startIdxTmp;
+    numShapes = jsonData.length;
+    
+    console.log("File loaded!");
+  }).catch(error => console.log(error));
+}
+
+function readFileContent(file) {
+	const reader = new FileReader()
+  return new Promise((resolve, reject) => {
+    reader.onload = event => resolve(event.target.result)
+    reader.onerror = error => reject(error)
+    reader.readAsText(file)
+  })
+}
+
+function download(content, fileName, contentType) {
+  var a = document.createElement("a");
+  var file = new Blob([content], {type: contentType});
+  a.href = URL.createObjectURL(file);
+  a.download = fileName;
+  a.click();
 }
 
 function insertDot(index, mouseXY){
@@ -101,6 +141,11 @@ window.onload = function init() {
     console.log("Now in delete mode");
   });
 
+  var downloadButton = document.getElementById("downloadButton");
+  downloadButton.addEventListener("click", function() {
+    download(JSON.stringify(shapes), 'json.txt', 'text/plain');
+  });
+
   // Canvas listeners
   canvas.addEventListener("mousedown", function(event){
     mouseClicked = true;
@@ -140,6 +185,7 @@ window.onload = function init() {
     } else if (mode == "edit"){
       // TODO
       // if item held = dot, masukin ke variabel
+      
       // else (misal sisi nya) do nothing -> karena bukan di drag tapi di klik
     } else if (mode == "delete"){
       // TODO do nothing kalau di drag
@@ -187,6 +233,13 @@ window.onload = function init() {
             // default black line
             insertColor(index, vec4(colors[0]));
             insertColor(index+1, vec4(colors[0]));
+
+            shapes[numShapes] = {
+              "type": "line",
+              "numDot": 2,
+              "dots": [vec2(startX, startY), vec2(mouseX, mouseY)],
+              "color": vec4(colors[0]),
+            }
           }
         } else if(typeValue == "square"){
           if(Math.abs(mouseX-startX) > epsilon){
@@ -208,7 +261,7 @@ window.onload = function init() {
   });
 
   gl.viewport(0, 0, canvas.width, canvas.height);
-  gl.clearColor(0.8, 0.8, 0.8, 1.0);
+  gl.clearColor(0.9, 0.9, 0.9, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   //
