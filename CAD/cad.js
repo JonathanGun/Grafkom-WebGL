@@ -128,8 +128,8 @@ window.onload = function init() {
 
   typeMap = {
     "line": gl.LINES,
-    "square": gl.QUADS,
-    "polygon": gl.POLYGON,
+    "square": gl.TRIANGLE_FAN,
+    "polygon": gl.TRIANGLE_FAN,
   }
 
   // Button listeners
@@ -201,11 +201,15 @@ window.onload = function init() {
         })
       })
     } else if (mode == "delete"){
-      // TODO do nothing kalau di drag
+      // do nothing kalau di drag
     }
   });
 
   canvas.addEventListener("click", function(event){
+    var mouseX = 2 * event.clientX / canvas.width - 1;
+    var mouseY = 2 * (canvas.height - event.clientY) / canvas.height - 1;
+    var mouse = vec2(mouseX, mouseY);
+
     if(mode == "draw"){
       if(typeValue == "polygon"){
         // TODO save titik2nya
@@ -231,8 +235,10 @@ window.onload = function init() {
         }
       } else if(typeValue == "square"){
         // TODO kalo uda jadi diuncomment:
-        // numShapes++;
-        // index += 4;
+        // if(!closeEnough(mouse, startXY)){
+        //   numShapes++;
+        //   index += 4;
+        // }
       } else if(typeValue == "polygon"){
         // do nothing, harus di klik klik
       }
@@ -255,7 +261,7 @@ window.onload = function init() {
             }
           }
         } else if(typeValue == "square"){
-          if(Math.abs(mouseX-startX) > epsilon){
+          if(!closeEnough(mouse, startXY)){
             // TODO hitung 3 titik lainnya, masukin ke array shapes[numShapes], jangan lupa colornya
           }
         } else if(typeValue == "polygon"){
@@ -308,16 +314,13 @@ function render() {
   
   // if lagi ngegambar, show gambar saat ini
   var tmp = mouseClicked?(numShapes+1):(numShapes);
+  tmp = type[tmp]=="polygon"?(tmp+1):(tmp);
   for (var i = 0; i < tmp; i++) {
     gl.drawArrays(gl.POINTS, start[i], numDots[i]);
   }
   for (var i = 0; i < tmp; i++) {
     // if currently drawing polygon and not finished, show as line strip
-    if(mouseClicked && i == tmp-1 && type[i] == "polygon"){
-      gl.drawArrays(gl.LINE_STRIP, start[i], numDots[i]);
-    } else {
-      gl.drawArrays(typeMap[type[i]], start[i], numDots[i]);
-    }
+    gl.drawArrays(typeMap[type[i]], start[i], numDots[i]);
   }
 
   if(mouseClicked && !equal(editedDotIdx, vec2(-1, -1))){
