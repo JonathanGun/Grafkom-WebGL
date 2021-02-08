@@ -7,7 +7,7 @@ var bufferId;
 var cBufferId;
 var maxNumVertices = 20000;
 var delay = 50;
-var epsilon = 0.5/100;
+var epsilon = 0.5 / 100;
 
 var colors = [
   vec4(0.0, 0.0, 0.0, 1.0), // black
@@ -42,7 +42,7 @@ var shapes = [];
 
 var mouseClicked = false;
 
-function clear(){
+function clear() {
   index = 0;
   numShapes = 0;
   numDots = [0];
@@ -55,7 +55,7 @@ function clear(){
 }
 
 // load and save
-function readFile(inp){
+function readFile(inp) {
   readFileContent(inp.files[0]).then(jsonData => {
     shapes = JSON.parse(jsonData);
     loadToBuffer();
@@ -64,13 +64,13 @@ function readFile(inp){
   }).catch(error => console.log(error));
 }
 
-function loadToBuffer(){
+function loadToBuffer() {
   var startIdxTmp = 0;
   shapes.forEach((shape, i) => {
     type[i] = shape.type;
     start[i] = startIdxTmp;
     numDots[i] = shape.dots.length;
-    
+
     shape.dots.forEach((dot, i) => {
       insertDot(startIdxTmp, vec2(dot));
       insertColor(startIdxTmp, vec4(shape.color));
@@ -81,7 +81,7 @@ function loadToBuffer(){
 }
 
 function readFileContent(file) {
-	const reader = new FileReader()
+  const reader = new FileReader()
   return new Promise((resolve, reject) => {
     reader.onload = event => resolve(event.target.result)
     reader.onerror = error => reject(error)
@@ -91,29 +91,29 @@ function readFileContent(file) {
 
 function download(content, fileName, contentType) {
   var a = document.createElement("a");
-  var file = new Blob([content], {type: contentType});
+  var file = new Blob([content], { type: contentType });
   a.href = URL.createObjectURL(file);
   a.download = fileName;
   a.click();
 }
 
 // webgl buffer
-function insertDot(index, mouseXY){
+function insertDot(index, mouseXY) {
   gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
   gl.bufferSubData(gl.ARRAY_BUFFER, 8 * index, flatten(mouseXY));
 }
 
-function insertColor(index, c){
+function insertColor(index, c) {
   gl.bindBuffer(gl.ARRAY_BUFFER, cBufferId);
   gl.bufferSubData(gl.ARRAY_BUFFER, 16 * index, flatten(c));
 }
 
 // math helper
-function distance(u, v){
+function distance(u, v) {
   return length(subtract(u, v));
 }
 
-function closeEnough(u, v){
+function closeEnough(u, v) {
   return distance(u, v) <= epsilon;
 }
 
@@ -134,7 +134,7 @@ window.onload = function init() {
 
   // Button listeners
   var typeSelect = document.getElementById("type");
-  typeSelect.addEventListener("click", function() {
+  typeSelect.addEventListener("click", function () {
     typeValue = typeSelect.value;
     mode = "draw";
     console.log("Now on draw mode. Shape type: " + typeValue);
@@ -144,32 +144,112 @@ window.onload = function init() {
   clearButton.addEventListener("click", clear);
 
   var editButton = document.getElementById("editButton");
-  editButton.addEventListener("click", function() {
+  editButton.addEventListener("click", function () {
     mode = "edit";
     console.log("Now in edit mode");
   });
 
   var deleteButton = document.getElementById("deleteButton");
-  deleteButton.addEventListener("click", function() {
+  deleteButton.addEventListener("click", function () {
     mode = "delete";
     console.log("Now in delete mode");
   });
 
   var downloadButton = document.getElementById("downloadButton");
-  downloadButton.addEventListener("click", function() {
+  downloadButton.addEventListener("click", function () {
     download(JSON.stringify(shapes), document.getElementById("file-name").value + ".txt", 'text/plain');
   });
 
+  function addShape(type, n) {
+    // create a div like this:
+    // <div id="shape-0">
+    //   <div>Type: <span id="shape-type-0">line</span></div>
+    //   <div>Dots: <span id="shape-dots-0">(0,0), (1,1)</span></div>
+    //   <div>Length: <input type="text" id="shape-length-0" value="0.5"></div>
+    //   <div>Color: <span id="shape-color-0">0,0,0,1</span></div>
+    //   <br>
+    // </div>
+
+    var div = document.createElement("div");
+    div.setAttribute("id", "shape-" + numShapes);
+    div.innerHTML = numShapes;
+
+    var typeSpan = document.createElement("span");
+    typeSpan.setAttribute("id", "shape-type" + numShapes);
+    var dotsSpan = document.createElement("span");
+    dotsSpan.setAttribute("id", "shape-dots-" + numShapes);
+    var lengthSpan = document.createElement("input");
+    lengthSpan.setAttribute("id", "shape-length-" + numShapes);
+    var colorSpan = document.createElement("span");
+    colorSpan.setAttribute("id", "shape-color-" + numShapes);
+
+    let typeP = document.createElement("div");
+    typeP.appendChild(document.createTextNode("Type: "));
+    typeP.appendChild(typeSpan);
+
+    let dotsP = document.createElement("div");
+    dotsP.appendChild(document.createTextNode("Dots: "));
+    dotsP.appendChild(dotsSpan);
+
+    let lengthP = document.createElement("div");
+    lengthP.appendChild(document.createTextNode("Length: "));
+    lengthP.appendChild(lengthSpan);
+
+    let colorP = document.createElement("div");
+    colorP.appendChild(document.createTextNode("Color: "));
+    colorP.appendChild(colorSpan);
+    if (type == "line") {
+      typeSpan.innerHTML = type;
+      dotsSpan.innerHTML = shapes[numShapes].dots;
+      lengthSpan.value = length(subtract(shapes[numShapes].dots[0], shapes[numShapes].dots[1]));
+      lengthSpan.onchange = editLineLength;
+      colorSpan.innerHTML = shapes[numShapes].color;
+
+      div.appendChild(typeP);
+      div.appendChild(dotsP);
+      div.appendChild(lengthP);
+      div.appendChild(colorP);
+    } else if (type == "square") {
+      // TODO
+    } else if (type == "polygon") {
+      // TODO
+    } else {
+      return;
+    }
+    div.appendChild(document.createElement("br"));
+    document.getElementById("shapes").appendChild(div);
+    numShapes++;
+    index += 2;
+  }
+
+  function editLineLength(e){
+    // asumsi titik pertama selalu fixed, hanya memindahkan titik kedua
+    console.log(e.target.value);
+    console.log(shapes[idx]);
+    var idx = e.target.id.split("-").slice(-1)[0];
+    let k = e.target.value / length(subtract(shapes[idx].dots[1], shapes[idx].dots[0]));
+    var lineLengthVec = subtract(shapes[idx].dots[1], shapes[idx].dots[0]);
+    shapes[idx].dots[1] = add(shapes[idx].dots[0], vec2(lineLengthVec[0] * k, lineLengthVec[1] * k));
+  }
+
+  function editSquareLength(e){
+    // TODO
+  }
+
+  function editColor(e){
+    // TODO
+  }
+
   // Canvas listeners
-  canvas.addEventListener("mousedown", function(event){
+  canvas.addEventListener("mousedown", function (event) {
     mouseClicked = true;
     var mouseX = 2 * event.clientX / canvas.width - 1;
     var mouseY = 2 * (canvas.height - event.clientY) / canvas.height - 1;
     let mouse = vec2(mouseX, mouseY);
 
 
-    if(mode == "draw"){
-      if(typeValue == "line"){
+    if (mode == "draw") {
+      if (typeValue == "line") {
         console.log("Now drawing line");
 
         startXY = mouse;
@@ -178,101 +258,99 @@ window.onload = function init() {
           "dots": [startXY, startXY],
           "color": vec4(colors[0]),
         }
-      } else if(typeValue == "square"){
+      } else if (typeValue == "square") {
         console.log("Now drawing line");
-        
+
         startXY = mouse;
         shapes[numShapes] = {
           "type": "square",
           "dots": [startXY, startXY, startXY, startXY],
           "color": vec4(colors[0]),
         }
-      } else if(typeValue == "polygon"){
+      } else if (typeValue == "polygon") {
         // do nothing, harus di klik klik
       }
-    } else if (mode == "edit"){
+    } else if (mode == "edit") {
       editedDotIdx = vec2(-1, -1);
       shapes.forEach((shape, i) => {
         shape.dots.forEach((dot, j) => {
           var dist = distance(mouse, vec2(dot));
-          if(dist < epsilon * 10){
+          if (dist < epsilon * 10) {
             editedDotIdx = vec2(i, j);
           }
         })
       })
-    } else if (mode == "delete"){
+    } else if (mode == "delete") {
       // do nothing kalau di drag
     }
   });
 
-  canvas.addEventListener("click", function(event){
+  canvas.addEventListener("click", function (event) {
     var mouseX = 2 * event.clientX / canvas.width - 1;
     var mouseY = 2 * (canvas.height - event.clientY) / canvas.height - 1;
     var mouse = vec2(mouseX, mouseY);
 
-    if(mode == "draw"){
-      if(typeValue == "polygon"){
+    if (mode == "draw") {
+      if (typeValue == "polygon") {
         // TODO save titik2nya
       }
-    } else if(mode == "edit"){
+    } else if (mode == "edit") {
       // TODO if item clicked = sisi, bisa ubah panjang sisinya
-    } else if(mode == "delete"){
+    } else if (mode == "delete") {
       // TODO delete barangnya
     }
   });
-  
-  canvas.addEventListener("mouseup", function(event){
+
+  canvas.addEventListener("mouseup", function (event) {
     mouseClicked = false;
     var mouseX = 2 * event.clientX / canvas.width - 1;
     var mouseY = 2 * (canvas.height - event.clientY) / canvas.height - 1;
     var mouse = vec2(mouseX, mouseY);
 
-    if(mode == "draw"){
-      if(typeValue == "line"){
-        if(!closeEnough(mouse, startXY)){
-          numShapes++;
-          index += 2;
+    if (mode == "draw") {
+      if (typeValue == "line") {
+        if (!closeEnough(mouse, startXY)) {
+          addShape("line", 2);
         }
-      } else if(typeValue == "square"){
+      } else if (typeValue == "square") {
         // TODO kalo uda jadi diuncomment:
         // if(!closeEnough(mouse, startXY)){
-        //   numShapes++;
-        //   index += 4;
+        //   addShape("square", 4);
         // }
-      } else if(typeValue == "polygon"){
+      } else if (typeValue == "polygon") {
         // do nothing, harus di klik klik
       }
     }
   });
-  
-  canvas.addEventListener("mousemove", function(event) {
+
+  canvas.addEventListener("mousemove", function (event) {
     var mouseX = 2 * event.clientX / canvas.width - 1;
     var mouseY = 2 * (canvas.height - event.clientY) / canvas.height - 1;
     var mouse = vec2(mouseX, mouseY);
-    
-    if(mouseClicked){
-      if(mode == "draw"){
-        if(typeValue == "line"){
-          if(!closeEnough(mouse, startXY)){
+
+    if (mouseClicked) {
+      if (mode == "draw") {
+        if (typeValue == "line") {
+          if (!closeEnough(mouse, startXY)) {
             shapes[numShapes] = {
               "type": "line",
               "dots": [startXY, mouse],
               "color": vec4(colors[0]),
             }
           }
-        } else if(typeValue == "square"){
-          if(!closeEnough(mouse, startXY)){
+        } else if (typeValue == "square") {
+          if (!closeEnough(mouse, startXY)) {
             // TODO hitung 3 titik lainnya, masukin ke array shapes[numShapes], jangan lupa colornya
           }
-        } else if(typeValue == "polygon"){
+        } else if (typeValue == "polygon") {
           // do nothing, polygon gabisa didrag
         }
-        
+
       } else if (mode == "edit") {
-        if(!(equal(editedDotIdx, vec2(-1, -1)))){
+        if (!(equal(editedDotIdx, vec2(-1, -1)))) {
           shapes[editedDotIdx[0]].dots[editedDotIdx[1]] = mouse;
         }
-      } else if (mode == "delete"){
+      } else if (mode == "delete") {
         // do nothing
       }
     }
@@ -311,19 +389,18 @@ function render() {
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   loadToBuffer();
-  
+
   // if lagi ngegambar, show gambar saat ini
-  var tmp = mouseClicked?(numShapes+1):(numShapes);
-  tmp = type[tmp]=="polygon"?(tmp+1):(tmp);
+  var tmp = mouseClicked ? (numShapes + 1) : (numShapes);
+  tmp = type[tmp] == "polygon" ? (tmp + 1) : (tmp);
   for (var i = 0; i < tmp; i++) {
     gl.drawArrays(gl.POINTS, start[i], numDots[i]);
   }
   for (var i = 0; i < tmp; i++) {
-    // if currently drawing polygon and not finished, show as line strip
     gl.drawArrays(typeMap[type[i]], start[i], numDots[i]);
   }
 
-  if(mouseClicked && !equal(editedDotIdx, vec2(-1, -1))){
+  if (mouseClicked && !equal(editedDotIdx, vec2(-1, -1))) {
     document.getElementById("selected-shape").innerHTML = shapes[editedDotIdx[0]].type;
     document.getElementById("selected-idx").innerHTML = editedDotIdx[1] + 1;
   } else {
@@ -332,7 +409,7 @@ function render() {
   }
 
   setTimeout(
-    function() {
+    function () {
       requestAnimFrame(render);
     }, delay
   );
