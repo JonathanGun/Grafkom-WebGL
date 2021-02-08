@@ -1,57 +1,80 @@
 <html>
-  <script type="text/javascript" src="../Common/webgl-utils.js"></script>
-  <script type="text/javascript" src="../Common/initShaders.js"></script>
-  <script type="text/javascript" src="../Common/MVnew.js"></script>
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MVnew.js"></script>
 
-  <script id="vertex-shader" type="x-shader/x-vertex">
+<script id="vertex-shader" type="x-shader/x-vertex">
     attribute vec4 vPosition; attribute vec4 vColor; varying vec4 fColor; void main() { gl_Position = vPosition; fColor = vColor; gl_PointSize = 5.0; }
   </script>
 
-  <script id="fragment-shader" type="x-shader/x-fragment">
+<script id="fragment-shader" type="x-shader/x-fragment">
     precision mediump float; varying vec4 fColor; void main() { gl_FragColor = fColor; }
   </script>
 
-  <script src="cad.js"></script> 
+<script src="cad.js"></script>
 
-  <body>
+<body>
+  <div onmousedown="window.scrollTo(0,0)">
+    <canvas id="gl-canvas" width="512" height="512">
+      Oops ... your browser doesn't support the HTML5 canvas element
+    </canvas>
+  </div>
+  <hr>
+  <div>
+    <h3>Menu</h3>
+    Draw a:
+    <select id="type" size="5">
+      <option value="line" selected>Line</option>
+      <option value="square">Square</option>
+      <option value="polygon">Polygon</option>
+    </select>
+    <button id="editButton">Edit</button>
+    <button id="helpButton">Help</button>
+    <button id="deleteButton">Delete</button>
+    <button id="clearButton">Clear</button>
+  </div>
+  <hr>
+  <div id="help" style="display:none">
+    <h3>Help</h3>
     <div>
-      <canvas id="gl-canvas" width="512" height="512">
-        Oops ... your browser doesn't support the HTML5 canvas element
-      </canvas>
+      <div>How to draw:</div>
+      <ol>
+        <li>Select a shape</li>
+        <li>Drag on canvas</li>
+      </ol>
+      <div>How to edit line length:</div>
+      <ol>
+        <li>Select a shape from "All shapes"</li>
+        <li>Drag on canvas</li>
+      </ol>
     </div>
-    <div>
-      Draw a:
-      <select id="type" size="5">
-        <option value="line" selected>Line</option>
-        <option value="square">Square</option>
-        <option value="polygon">Polygon</option>
-      </select>
-      <button id="editButton">Edit</button>
-      <button id="helpButton">Help</button>
-      <button id="deleteButton">Delete</button>
-      <button id="clearButton">Clear</button>
-    </div>
+    <hr>
+  </div>
+  <div id="save-load">
+    <h3>Save and Load</h3>
     <div>
       Load drawing: <input id="data-file" type="file" accept="text/plain" onchange="readFile(this)" />
     </div>
     <div>
-      Save drawing as: <input id="file-name" type="text" value="mydrawing"/>.txt
+      Save drawing as: <input id="file-name" type="text" value="mydrawing" />.txt
       <button id="downloadButton">Download save file</button>
     </div>
-    <hr>
+  </div>
+  <hr>
+  <div>
+    <h3>Selected Dot</h3>
     <div>
-      Selected dot:
-      <div>
-        Shape: <span id="selected-shape"></span><br>
-        N-th Dot (1-based): <span id="selected-idx"></span><br>
-      </div>
+      Shape: <span id="selected-shape"></span><br>
+      N-th Dot (1-based): <span id="selected-idx"></span><br>
     </div>
-    <hr>
-    <div>
-      All shapes:
-      <div id="shapes">
-        
-      </div>
+  </div>
+  <hr>
+  <div>
+    <h3>All Shapes</h3>
+    <div id="shapes">
+
     </div>
-  </body>
+  </div>
+</body>
+
 </html>

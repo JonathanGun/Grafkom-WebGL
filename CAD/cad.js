@@ -155,6 +155,13 @@ window.onload = function init() {
     console.log("Now in delete mode");
   });
 
+  var helpButton = document.getElementById("helpButton");
+  helpButton.addEventListener("click", function () {
+    let help = document.getElementById("help");
+    let disp = help.style.display;
+    help.style.display = disp == "none" ? "block" : "none";
+  });
+
   var downloadButton = document.getElementById("downloadButton");
   downloadButton.addEventListener("click", function () {
     download(JSON.stringify(shapes), document.getElementById("file-name").value + ".txt", 'text/plain');
@@ -222,7 +229,7 @@ window.onload = function init() {
     index += 2;
   }
 
-  function editLineLength(e){
+  function editLineLength(e) {
     // asumsi titik pertama selalu fixed, hanya memindahkan titik kedua
     console.log(e.target.value);
     console.log(shapes[idx]);
@@ -232,11 +239,11 @@ window.onload = function init() {
     shapes[idx].dots[1] = add(shapes[idx].dots[0], vec2(lineLengthVec[0] * k, lineLengthVec[1] * k));
   }
 
-  function editSquareLength(e){
+  function editSquareLength(e) {
     // TODO
   }
 
-  function editColor(e){
+  function editColor(e) {
     // TODO
   }
 
