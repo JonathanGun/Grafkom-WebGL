@@ -220,6 +220,16 @@ window.onload = function init() {
       // TODO
     } else if (type == "polygon") {
       // TODO
+      typeSpan.innerHTML = type;
+      dotsSpan.innerHTML = shapes[numShapes].dots;
+      lengthSpan.value = length(subtract(shapes[numShapes].dots[0], shapes[numShapes].dots[1]));
+      lengthSpan.onchange = editLineLength;
+      colorSpan.innerHTML = shapes[numShapes].color;
+
+      div.appendChild(typeP);
+      div.appendChild(dotsP);
+      div.appendChild(lengthP);
+      div.appendChild(colorP);
     } else {
       return;
     }
@@ -296,12 +306,41 @@ window.onload = function init() {
     var mouseX = 2 * event.clientX / canvas.width - 1;
     var mouseY = 2 * (canvas.height - event.clientY) / canvas.height - 1;
     var mouse = vec2(mouseX, mouseY);
+    var XY = mouse
 
     if (mode == "draw") {
       if (typeValue == "polygon") {
+        
+        if(!shapes[numShapes]){
+          shapes[numShapes] = {
+            "type": "polygon",
+            "dots": [XY],
+            "color": vec4(colors[0]),
+          }
+        } 
+        
+        else {
+          if(inside(XY, shapes[numShapes].dots)){
+            addShape("polygon", shapes[numShapes].dots.length);
+            console.log("Berhasil menambah shape");
+          }
+          else{
+            shapes[numShapes].dots.push(XY);
+          }
+          
+        }
+
+        
         // TODO save titik2nya
       }
     } else if (mode == "edit") {
+        for(i = numShapes - 1; i >= 0; i--){
+          console.log(inside(XY, shapes[i].dots))
+          if(inside(XY, shapes[i].dots)){
+            shapes[i].color = vec4(colors[1]);
+            break;
+          }
+        }
       // TODO if item clicked = sisi, bisa ubah panjang sisinya
     } else if (mode == "delete") {
       // TODO delete barangnya
@@ -391,6 +430,25 @@ window.onload = function init() {
 
   render();
 }
+
+function inside(point, vs) {
+  // ray-casting algorithm based on
+  // https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html/pnpoly.html
+  
+    var x = point[0], y = point[1];
+    
+    var inside = false;
+    for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        var xi = vs[i][0], yi = vs[i][1];
+        var xj = vs[j][0], yj = vs[j][1];
+        
+        var intersect = ((yi > y) != (yj > y))
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+  
+    return inside;
+  };
 
 function render() {
   gl.clear(gl.COLOR_BUFFER_BIT);
