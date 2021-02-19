@@ -334,6 +334,9 @@ window.onload = function init() {
         // TODO save titik2nya
       }
     } else if (mode == "edit") {
+
+        /* Ini script iseng buat ganti warna kalo mencet di dalem polygon sesuai layer yang paling akhir */
+ 
         for(i = numShapes - 1; i >= 0; i--){
           console.log(inside(XY, shapes[i].dots))
           if(inside(XY, shapes[i].dots)){
@@ -341,6 +344,8 @@ window.onload = function init() {
             break;
           }
         }
+        
+       
       // TODO if item clicked = sisi, bisa ubah panjang sisinya
     } else if (mode == "delete") {
       // TODO delete barangnya
@@ -432,9 +437,6 @@ window.onload = function init() {
 }
 
 function inside(point, vs) {
-  // ray-casting algorithm based on
-  // https://wrf.ecse.rpi.edu/Research/Short_Notes/pnpoly.html/pnpoly.html
-  
     var x = point[0], y = point[1];
     
     var inside = false;
