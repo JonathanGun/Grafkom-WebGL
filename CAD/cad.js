@@ -187,8 +187,10 @@ window.onload = function init() {
     dotsSpan.setAttribute("id", "shape-dots-" + numShapes);
     var lengthSpan = document.createElement("input");
     lengthSpan.setAttribute("id", "shape-length-" + numShapes);
-    var colorSpan = document.createElement("span");
+    var colorSpan = document.createElement("input");
+    colorSpan.setAttribute("type", "color");
     colorSpan.setAttribute("id", "shape-color-" + numShapes);
+    colorSpan.onchange = editColor;
 
     let typeP = document.createElement("div");
     typeP.appendChild(document.createTextNode("Type: "));
@@ -205,12 +207,13 @@ window.onload = function init() {
     let colorP = document.createElement("div");
     colorP.appendChild(document.createTextNode("Color: "));
     colorP.appendChild(colorSpan);
+    
     if (type == "line") {
       typeSpan.innerHTML = type;
       dotsSpan.innerHTML = shapes[numShapes].dots;
       lengthSpan.value = length(subtract(shapes[numShapes].dots[0], shapes[numShapes].dots[1]));
       lengthSpan.onchange = editLineLength;
-      colorSpan.innerHTML = shapes[numShapes].color;
+      // colorSpan.innerHTML = shapes[numShapes].color;
 
       div.appendChild(typeP);
       div.appendChild(dotsP);
@@ -224,8 +227,7 @@ window.onload = function init() {
       dotsSpan.innerHTML = shapes[numShapes].dots;
       lengthSpan.value = length(subtract(shapes[numShapes].dots[0], shapes[numShapes].dots[1]));
       lengthSpan.onchange = editLineLength;
-      colorSpan.innerHTML = shapes[numShapes].color;
-
+      
       div.appendChild(typeP);
       div.appendChild(dotsP);
       div.appendChild(lengthP);
@@ -255,6 +257,18 @@ window.onload = function init() {
 
   function editColor(e) {
     // TODO
+    console.log(e.target.value);
+    let rgbColor = convertToRgb(e.target.value);
+    console.log(rgbColor);
+    
+    var idx = e.target.id.split("-").slice(-1)[0];
+    var newColor = vec4(rgbColor[0]/255, rgbColor[1]/255, rgbColor[2]/255, 1);
+    console.log(newColor);
+
+    shapes[idx].color = newColor;
+
+
+    // console.log(shapes[idx]);
   }
 
   // Canvas listeners
@@ -334,17 +348,6 @@ window.onload = function init() {
         // TODO save titik2nya
       }
     } else if (mode == "edit") {
-
-        /* Ini script iseng buat ganti warna kalo mencet di dalem polygon sesuai layer yang paling akhir */
- 
-        for(i = numShapes - 1; i >= 0; i--){
-          console.log(inside(XY, shapes[i].dots))
-          if(inside(XY, shapes[i].dots)){
-            shapes[i].color = vec4(colors[1]);
-            break;
-          }
-        }
-        
        
       // TODO if item clicked = sisi, bisa ubah panjang sisinya
     } else if (mode == "delete") {
@@ -451,6 +454,14 @@ function inside(point, vs) {
   
     return inside;
   };
+
+  function convertToRgb(hex){
+    hex = hex.replace('#','');
+    let r = parseInt(hex.substring(0,2), 16);
+    let g = parseInt(hex.substring(2,4), 16);
+    let b = parseInt(hex.substring(4,6), 16);
+    return [r,g,b];
+  }
 
 function render() {
   gl.clear(gl.COLOR_BUFFER_BIT);
