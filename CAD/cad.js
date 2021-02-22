@@ -220,7 +220,15 @@ window.onload = function init() {
       div.appendChild(lengthP);
       div.appendChild(colorP);
     } else if (type == "square") {
-      // TODO
+      typeSpan.innerHTML = type;
+      dotsSpan.innerHTML = shapes[numShapes].dots;
+      lengthSpan.value = length(subtract(shapes[numShapes].dots[0], shapes[numShapes].dots[1]));
+      lengthSpan.onchange = editLineLength;
+
+      div.appendChild(typeP);
+      div.appendChild(dotsP);
+      div.appendChild(lengthP);
+      div.appendChild(colorP);
     } else if (type == "polygon") {
       // TODO
       typeSpan.innerHTML = type;
@@ -252,7 +260,13 @@ window.onload = function init() {
   }
 
   function editSquareLength(e) {
-    // TODO
+    // asumsi titik pertama selalu fixed, hanya memindahkan titik kedua
+    /*console.log(e.target.value);
+    console.log(shapes[idx]);
+    var idx = e.target.id.split("-").slice(-1)[0];
+    let k = e.target.value / length(subtract(shapes[idx].dots[1], shapes[idx].dots[0]));
+    var lineLengthVec = subtract(shapes[idx].dots[1], shapes[idx].dots[0]);
+    shapes[idx].dots[1] = add(shapes[idx].dots[0], vec2(lineLengthVec[0] * k, lineLengthVec[1] * k));*/
   }
 
   function editColor(e) {
@@ -290,7 +304,7 @@ window.onload = function init() {
           "color": vec4(colors[0]),
         }
       } else if (typeValue == "square") {
-        console.log("Now drawing line");
+        console.log("Now drawing Square");
 
         startXY = mouse;
         shapes[numShapes] = {
@@ -302,14 +316,14 @@ window.onload = function init() {
         // do nothing, harus di klik klik
       }
     } else if (mode == "edit") {
-      editedDotIdx = vec2(-1, -1);
-      shapes.forEach((shape, i) => {
-        shape.dots.forEach((dot, j) => {
-          var dist = distance(mouse, vec2(dot));
-          if (dist < epsilon * 10) {
-            editedDotIdx = vec2(i, j);
-          }
-        })
+        editedDotIdx = vec2(-1, -1);
+        shapes.forEach((shape, i) => {
+          shape.dots.forEach((dot, j) => {
+            var dist = distance(mouse, vec2(dot));
+            if (dist < epsilon * 10) {
+              editedDotIdx = vec2(i, j);
+            }
+          })
       })
     } else if (mode == "delete") {
       // do nothing kalau di drag
@@ -366,11 +380,10 @@ window.onload = function init() {
         if (!closeEnough(mouse, startXY)) {
           addShape("line", 2);
         }
-      } else if (typeValue == "square") {
-        // TODO kalo uda jadi diuncomment:
-        // if(!closeEnough(mouse, startXY)){
-        //   addShape("square", 4);
-        // }
+      } else if (typeValue == "square") {        
+        if(!closeEnough(mouse, startXY)){
+          addShape("square", 4);
+        }
       } else if (typeValue == "polygon") {
         // do nothing, harus di klik klik
       }
@@ -395,14 +408,30 @@ window.onload = function init() {
         } else if (typeValue == "square") {
           if (!closeEnough(mouse, startXY)) {
             // TODO hitung 3 titik lainnya, masukin ke array shapes[numShapes], jangan lupa colornya
+            console.log("MASUK SINI GAN");
+            console.log(mouse[0]);
+            console.log(mouse[1]);
+            shapes[numShapes] = {
+              "type": "square",
+              "dots": [startXY, vec2(mouse[0], startXY[1]), mouse, vec2(startXY[0], mouse[1])],
+              "color": vec4(colors[0]),
+            }
           }
         } else if (typeValue == "polygon") {
           // do nothing, polygon gabisa didrag
         }
 
       } else if (mode == "edit") {
-        if (!(equal(editedDotIdx, vec2(-1, -1)))) {
-          shapes[editedDotIdx[0]].dots[editedDotIdx[1]] = mouse;
+        if ((typeValue == "line") || (typeValue == "polygon")){
+          if (!(equal(editedDotIdx, vec2(-1, -1)))) {
+            shapes[editedDotIdx[0]].dots[editedDotIdx[1]] = mouse;
+          }
+        }
+        else{
+          //SQUARE
+          if (!(equal(editedDotIdx, vec2(-1, -1)))) {
+            shapes[editedDotIdx[0]].dots[editedDotIdx[1]] = mouse;
+          }
         }
       } else if (mode == "delete") {
         // do nothing
