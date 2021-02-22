@@ -411,11 +411,34 @@ window.onload = function init() {
             console.log("MASUK SINI GAN");
             console.log(mouse[0]);
             console.log(mouse[1]);
-            shapes[numShapes] = {
-              "type": "square",
-              "dots": [startXY, vec2(mouse[0], startXY[1]), mouse, vec2(startXY[0], mouse[1])],
-              "color": vec4(colors[0]),
-            }
+            var panjang = mouse[0] - startXY[0];
+            var lebar = mouse[1] - startXY[1];
+            var garisMin = Math.min(Math.abs(panjang), Math.abs(lebar));
+            if((panjang>0) && (lebar<0)){
+              shapes[numShapes] = {
+                "type": "square",
+                "dots": [startXY, vec2(startXY[0]+garisMin, startXY[1]), vec2(startXY[0]+garisMin, startXY[1]-garisMin), vec2(startXY[0], startXY[1]-garisMin)],
+                "color": vec4(colors[0]),
+              }
+            } else if((panjang>0) && (lebar>0)){
+              shapes[numShapes] = {
+                "type": "square",
+                "dots": [startXY, vec2(startXY[0]+garisMin, startXY[1]), vec2(startXY[0]+garisMin, startXY[1]+garisMin), vec2(startXY[0], startXY[1]+garisMin)],
+                "color": vec4(colors[0]),
+              }
+            } else if((panjang<0) && (lebar>0)){
+              shapes[numShapes] = {
+                "type": "square",
+                "dots": [startXY, vec2(startXY[0]-garisMin, startXY[1]), vec2(startXY[0]-garisMin, startXY[1]+garisMin), vec2(startXY[0], startXY[1]+garisMin)],
+                "color": vec4(colors[0]),
+              }
+            } else if((panjang<0) && (lebar<0)){
+              shapes[numShapes] = {
+                "type": "square",
+                "dots": [startXY, vec2(startXY[0]-garisMin, startXY[1]), vec2(startXY[0]-garisMin, startXY[1]-garisMin), vec2(startXY[0], startXY[1]-garisMin)],
+                "color": vec4(colors[0]),
+              }
+            } 
           }
         } else if (typeValue == "polygon") {
           // do nothing, polygon gabisa didrag
