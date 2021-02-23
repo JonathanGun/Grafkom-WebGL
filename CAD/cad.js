@@ -35,7 +35,7 @@ var start;
 var type;
 
 // string
-var mode = "draw"; // draw, edit, delete, null
+var mode = "draw"; // draw, edit, null
 var typeValue = "line"; // line, square, polygon
 
 var shapes = [];
@@ -61,6 +61,7 @@ function readFile(inp) {
     loadToBuffer();
     numShapes = shapes.length;
     console.log("File loaded!");
+    // TODO update HTML on All Shapes section
   }).catch(error => console.log(error));
 }
 
@@ -117,6 +118,14 @@ function closeEnough(u, v) {
   return distance(u, v) <= epsilon;
 }
 
+function convertToRgb(hex) {
+  hex = hex.replace('#', '');
+  let r = parseInt(hex.substring(0, 2), 16);
+  let g = parseInt(hex.substring(2, 4), 16);
+  let b = parseInt(hex.substring(4, 6), 16);
+  return [r, g, b];
+}
+
 window.onload = function init() {
   clear();
   canvas = document.getElementById("gl-canvas");
@@ -149,12 +158,6 @@ window.onload = function init() {
     console.log("Now in edit mode");
   });
 
-  var deleteButton = document.getElementById("deleteButton");
-  deleteButton.addEventListener("click", function () {
-    mode = "delete";
-    console.log("Now in delete mode");
-  });
-
   var helpButton = document.getElementById("helpButton");
   helpButton.addEventListener("click", function () {
     let help = document.getElementById("help");
@@ -164,7 +167,7 @@ window.onload = function init() {
 
   var downloadButton = document.getElementById("downloadButton");
   downloadButton.addEventListener("click", function () {
-    download(JSON.stringify(shapes), document.getElementById("file-name").value + ".txt", 'text/plain');
+    download(JSON.stringify(shapes, null, 2), document.getElementById("file-name").value + ".json", 'application/json');
   });
 
   function addShape(type, n) {
@@ -207,7 +210,7 @@ window.onload = function init() {
     let colorP = document.createElement("div");
     colorP.appendChild(document.createTextNode("Color: "));
     colorP.appendChild(colorSpan);
-    
+
     if (type == "line") {
       typeSpan.innerHTML = type;
       dotsSpan.innerHTML = shapes[numShapes].dots;
@@ -230,12 +233,11 @@ window.onload = function init() {
       div.appendChild(lengthP);
       div.appendChild(colorP);
     } else if (type == "polygon") {
-      // TODO
       typeSpan.innerHTML = type;
       dotsSpan.innerHTML = shapes[numShapes].dots;
       lengthSpan.value = length(subtract(shapes[numShapes].dots[0], shapes[numShapes].dots[1]));
       lengthSpan.onchange = editLineLength;
-      
+
       div.appendChild(typeP);
       div.appendChild(dotsP);
       div.appendChild(lengthP);
@@ -251,8 +253,6 @@ window.onload = function init() {
 
   function editLineLength(e) {
     // asumsi titik pertama selalu fixed, hanya memindahkan titik kedua
-    console.log(e.target.value);
-    console.log(shapes[idx]);
     var idx = e.target.id.split("-").slice(-1)[0];
     let k = e.target.value / length(subtract(shapes[idx].dots[1], shapes[idx].dots[0]));
     var lineLengthVec = subtract(shapes[idx].dots[1], shapes[idx].dots[0]);
@@ -270,19 +270,12 @@ window.onload = function init() {
   }
 
   function editColor(e) {
-    // TODO
-    console.log(e.target.value);
     let rgbColor = convertToRgb(e.target.value);
-    console.log(rgbColor);
-    
+
     var idx = e.target.id.split("-").slice(-1)[0];
-    var newColor = vec4(rgbColor[0]/255, rgbColor[1]/255, rgbColor[2]/255, 1);
-    console.log(newColor);
+    var newColor = vec4(rgbColor[0] / 255, rgbColor[1] / 255, rgbColor[2] / 255, 1);
 
     shapes[idx].color = newColor;
-
-
-    // console.log(shapes[idx]);
   }
 
   // Canvas listeners
@@ -316,17 +309,15 @@ window.onload = function init() {
         // do nothing, harus di klik klik
       }
     } else if (mode == "edit") {
-        editedDotIdx = vec2(-1, -1);
-        shapes.forEach((shape, i) => {
-          shape.dots.forEach((dot, j) => {
-            var dist = distance(mouse, vec2(dot));
-            if (dist < epsilon * 10) {
-              editedDotIdx = vec2(i, j);
-            }
-          })
+      editedDotIdx = vec2(-1, -1);
+      shapes.forEach((shape, i) => {
+        shape.dots.forEach((dot, j) => {
+          var dist = distance(mouse, vec2(dot));
+          if (dist < epsilon * 10) {
+            editedDotIdx = vec2(i, j);
+          }
+        })
       })
-    } else if (mode == "delete") {
-      // do nothing kalau di drag
     }
   });
 
@@ -338,34 +329,27 @@ window.onload = function init() {
 
     if (mode == "draw") {
       if (typeValue == "polygon") {
-        
-        if(!shapes[numShapes]){
+        if (!shapes[numShapes]) {
           shapes[numShapes] = {
             "type": "polygon",
             "dots": [XY],
             "color": vec4(colors[0]),
           }
-        } 
-        
-        else {
-          if(inside(XY, shapes[numShapes].dots)){
-            addShape("polygon", shapes[numShapes].dots.length);
-            console.log("Berhasil menambah shape");
-          }
-          else{
-            shapes[numShapes].dots.push(XY);
-          }
-          
+          startXY = XY;
         }
 
-        
-        // TODO save titik2nya
+        else {
+          if (distance(XY, shapes[numShapes].dots[0]) <= epsilon * 10) {
+            // if (inside(XY, shapes[numShapes].dots)) {
+            addShape("polygon", shapes[numShapes].dots.length);
+            console.log("Berhasil menambah polygon");
+          } else {
+            shapes[numShapes].dots.push(XY);
+          }
+        }
       }
     } else if (mode == "edit") {
-       
       // TODO if item clicked = sisi, bisa ubah panjang sisinya
-    } else if (mode == "delete") {
-      // TODO delete barangnya
     }
   });
 
@@ -380,8 +364,8 @@ window.onload = function init() {
         if (!closeEnough(mouse, startXY)) {
           addShape("line", 2);
         }
-      } else if (typeValue == "square") {        
-        if(!closeEnough(mouse, startXY)){
+      } else if (typeValue == "square") {
+        if (!closeEnough(mouse, startXY)) {
           addShape("square", 4);
         }
       } else if (typeValue == "polygon") {
@@ -407,57 +391,50 @@ window.onload = function init() {
           }
         } else if (typeValue == "square") {
           if (!closeEnough(mouse, startXY)) {
-            // TODO hitung 3 titik lainnya, masukin ke array shapes[numShapes], jangan lupa colornya
-            console.log("MASUK SINI GAN");
-            console.log(mouse[0]);
-            console.log(mouse[1]);
             var panjang = mouse[0] - startXY[0];
             var lebar = mouse[1] - startXY[1];
             var garisMin = Math.min(Math.abs(panjang), Math.abs(lebar));
-            if((panjang>0) && (lebar<0)){
+            if ((panjang > 0) && (lebar < 0)) {
               shapes[numShapes] = {
                 "type": "square",
-                "dots": [startXY, vec2(startXY[0]+garisMin, startXY[1]), vec2(startXY[0]+garisMin, startXY[1]-garisMin), vec2(startXY[0], startXY[1]-garisMin)],
+                "dots": [startXY, vec2(startXY[0] + garisMin, startXY[1]), vec2(startXY[0] + garisMin, startXY[1] - garisMin), vec2(startXY[0], startXY[1] - garisMin)],
                 "color": vec4(colors[0]),
               }
-            } else if((panjang>0) && (lebar>0)){
+            } else if ((panjang > 0) && (lebar > 0)) {
               shapes[numShapes] = {
                 "type": "square",
-                "dots": [startXY, vec2(startXY[0]+garisMin, startXY[1]), vec2(startXY[0]+garisMin, startXY[1]+garisMin), vec2(startXY[0], startXY[1]+garisMin)],
+                "dots": [startXY, vec2(startXY[0] + garisMin, startXY[1]), vec2(startXY[0] + garisMin, startXY[1] + garisMin), vec2(startXY[0], startXY[1] + garisMin)],
                 "color": vec4(colors[0]),
               }
-            } else if((panjang<0) && (lebar>0)){
+            } else if ((panjang < 0) && (lebar > 0)) {
               shapes[numShapes] = {
                 "type": "square",
-                "dots": [startXY, vec2(startXY[0]-garisMin, startXY[1]), vec2(startXY[0]-garisMin, startXY[1]+garisMin), vec2(startXY[0], startXY[1]+garisMin)],
+                "dots": [startXY, vec2(startXY[0] - garisMin, startXY[1]), vec2(startXY[0] - garisMin, startXY[1] + garisMin), vec2(startXY[0], startXY[1] + garisMin)],
                 "color": vec4(colors[0]),
               }
-            } else if((panjang<0) && (lebar<0)){
+            } else if ((panjang < 0) && (lebar < 0)) {
               shapes[numShapes] = {
                 "type": "square",
-                "dots": [startXY, vec2(startXY[0]-garisMin, startXY[1]), vec2(startXY[0]-garisMin, startXY[1]-garisMin), vec2(startXY[0], startXY[1]-garisMin)],
+                "dots": [startXY, vec2(startXY[0] - garisMin, startXY[1]), vec2(startXY[0] - garisMin, startXY[1] - garisMin), vec2(startXY[0], startXY[1] - garisMin)],
                 "color": vec4(colors[0]),
               }
-            } 
+            }
           }
         } else if (typeValue == "polygon") {
           // do nothing, polygon gabisa didrag
         }
 
       } else if (mode == "edit") {
-        if ((typeValue == "line") || (typeValue == "polygon")){
+        if ((typeValue == "line") || (typeValue == "polygon")) {
           if (!(equal(editedDotIdx, vec2(-1, -1)))) {
             shapes[editedDotIdx[0]].dots[editedDotIdx[1]] = mouse;
           }
-        }
-        else{
+        } else {
           //SQUARE
           if (!(equal(editedDotIdx, vec2(-1, -1)))) {
             shapes[editedDotIdx[0]].dots[editedDotIdx[1]] = mouse;
           }
         }
-      } else if (mode == "delete") {
-        // do nothing
       }
     }
   });
@@ -491,29 +468,21 @@ window.onload = function init() {
   render();
 }
 
-function inside(point, vs) {
-    var x = point[0], y = point[1];
-    
-    var inside = false;
-    for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-        var xi = vs[i][0], yi = vs[i][1];
-        var xj = vs[j][0], yj = vs[j][1];
-        
-        var intersect = ((yi > y) != (yj > y))
-            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-        if (intersect) inside = !inside;
-    }
-  
-    return inside;
-  };
+// function inside(point, vs) {
+//   var x = point[0], y = point[1];
 
-  function convertToRgb(hex){
-    hex = hex.replace('#','');
-    let r = parseInt(hex.substring(0,2), 16);
-    let g = parseInt(hex.substring(2,4), 16);
-    let b = parseInt(hex.substring(4,6), 16);
-    return [r,g,b];
-  }
+//   var inside = false;
+//   for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+//     var xi = vs[i][0], yi = vs[i][1];
+//     var xj = vs[j][0], yj = vs[j][1];
+
+//     var intersect = ((yi > y) != (yj > y))
+//       && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+//     if (intersect) inside = !inside;
+//   }
+
+//   return inside;
+// };
 
 function render() {
   gl.clear(gl.COLOR_BUFFER_BIT);
@@ -524,11 +493,18 @@ function render() {
   var tmp = mouseClicked ? (numShapes + 1) : (numShapes);
   tmp = type[tmp] == "polygon" ? (tmp + 1) : (tmp);
   for (var i = 0; i < tmp; i++) {
-    gl.drawArrays(gl.POINTS, start[i], numDots[i]);
+    if (shapes[i]) {
+      gl.drawArrays(gl.POINTS, start[i], numDots[i]);
+    }
   }
   for (var i = 0; i < tmp; i++) {
-    gl.drawArrays(typeMap[type[i]], start[i], numDots[i]);
+    if (type[i] == "polygon" && numShapes == i && closeEnough(startXY, shapes[i].dots[0])) {
+      gl.drawArrays(gl.LINE_STRIP, start[i], numDots[i]);
+    } else {
+      gl.drawArrays(typeMap[type[i]], start[i], numDots[i]);
+    }
   }
+
 
   if (mouseClicked && !equal(editedDotIdx, vec2(-1, -1))) {
     document.getElementById("selected-shape").innerHTML = shapes[editedDotIdx[0]].type;

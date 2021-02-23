@@ -30,13 +30,13 @@
     </select>
     <button id="editButton">Edit</button>
     <button id="helpButton">Help</button>
-    <button id="deleteButton">Delete</button>
     <button id="clearButton">Clear</button>
   </div>
   <hr>
   <div id="help" style="display:none">
     <h3>Help</h3>
     <div>
+      <!-- TODO lengkapin -->
       <div>How to draw:</div>
       <ol>
         <li>Select a shape</li>
@@ -53,10 +53,10 @@
   <div id="save-load">
     <h3>Save and Load</h3>
     <div>
-      Load drawing: <input id="data-file" type="file" accept="text/plain" onchange="readFile(this)" />
+      Load drawing: <input id="data-file" type="file" accept="application/json" onchange="readFile(this)" />
     </div>
     <div>
-      Save drawing as: <input id="file-name" type="text" value="mydrawing" />.txt
+      Save drawing as: <input id="file-name" type="text" value="mydrawing" />.json
       <button id="downloadButton">Download save file</button>
     </div>
   </div>
