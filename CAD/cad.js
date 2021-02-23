@@ -226,7 +226,7 @@ window.onload = function init() {
       typeSpan.innerHTML = type;
       dotsSpan.innerHTML = shapes[numShapes].dots;
       lengthSpan.value = length(subtract(shapes[numShapes].dots[0], shapes[numShapes].dots[1]));
-      lengthSpan.onchange = editLineLength;
+      lengthSpan.onchange = editSquareLength;
 
       div.appendChild(typeP);
       div.appendChild(dotsP);
@@ -261,12 +261,17 @@ window.onload = function init() {
 
   function editSquareLength(e) {
     // asumsi titik pertama selalu fixed, hanya memindahkan titik kedua
-    /*console.log(e.target.value);
+    console.log(e.target.value);
     console.log(shapes[idx]);
     var idx = e.target.id.split("-").slice(-1)[0];
     let k = e.target.value / length(subtract(shapes[idx].dots[1], shapes[idx].dots[0]));
     var lineLengthVec = subtract(shapes[idx].dots[1], shapes[idx].dots[0]);
-    shapes[idx].dots[1] = add(shapes[idx].dots[0], vec2(lineLengthVec[0] * k, lineLengthVec[1] * k));*/
+    var lineLengthVec2 = subtract(shapes[idx].dots[2], shapes[idx].dots[0]);
+    var lineLengthVec3 = subtract(shapes[idx].dots[3], shapes[idx].dots[0]);
+
+    shapes[idx].dots[1] = add(shapes[idx].dots[0], vec2(lineLengthVec[0] * k, lineLengthVec[1] * k));
+    shapes[idx].dots[2] = add(shapes[idx].dots[0], vec2(lineLengthVec2[0] * k, lineLengthVec2[1] * k));
+    shapes[idx].dots[3] = add(shapes[idx].dots[0], vec2(lineLengthVec3[0] * k, lineLengthVec3[1] * k));
   }
 
   function editColor(e) {
