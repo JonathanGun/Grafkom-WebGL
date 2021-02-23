@@ -429,10 +429,72 @@ window.onload = function init() {
           if (!(equal(editedDotIdx, vec2(-1, -1)))) {
             shapes[editedDotIdx[0]].dots[editedDotIdx[1]] = mouse;
           }
-        } else {
+        } else if(typeValue == "square"){
           //SQUARE
+          
+          console.log("MASUK SINI")
           if (!(equal(editedDotIdx, vec2(-1, -1)))) {
-            shapes[editedDotIdx[0]].dots[editedDotIdx[1]] = mouse;
+            var titikMana = shapes[editedDotIdx[0]].dots[editedDotIdx[1]];
+            if (titikMana == shapes[editedDotIdx[0]].dots[0]){             
+              var panjang = mouse[0] - titikMana[0];
+              var lebar = mouse[1] - titikMana[1];
+              var garisMin = Math.min(Math.abs(panjang), Math.abs(lebar));
+              if((mouse[0]>titikMana[0]) && (mouse[1]<titikMana[1])){
+                shapes[editedDotIdx[0]].dots[0] = vec2(shapes[editedDotIdx[0]].dots[0][0]+garisMin, shapes[editedDotIdx[0]].dots[0][1]-garisMin);
+                shapes[editedDotIdx[0]].dots[1] = vec2(shapes[editedDotIdx[0]].dots[1][0], shapes[editedDotIdx[0]].dots[1][1]-garisMin);
+                shapes[editedDotIdx[0]].dots[3] = vec2(shapes[editedDotIdx[0]].dots[3][0]+garisMin, shapes[editedDotIdx[0]].dots[3][1]);
+              }  
+              else if((mouse[0]<titikMana[0]) && (mouse[1]>titikMana[1])){
+                shapes[editedDotIdx[0]].dots[0] = vec2(shapes[editedDotIdx[0]].dots[0][0]-garisMin, shapes[editedDotIdx[0]].dots[0][1]+garisMin);
+                shapes[editedDotIdx[0]].dots[1] = vec2(shapes[editedDotIdx[0]].dots[1][0], shapes[editedDotIdx[0]].dots[1][1]+garisMin);
+                shapes[editedDotIdx[0]].dots[3] = vec2(shapes[editedDotIdx[0]].dots[3][0]-garisMin, shapes[editedDotIdx[0]].dots[3][1]);
+              }           
+            }
+            else if (titikMana == shapes[editedDotIdx[0]].dots[1]){             
+              var panjang = mouse[0] - titikMana[0];
+              var lebar = mouse[1] - titikMana[1];
+              var garisMin = Math.min(Math.abs(panjang), Math.abs(lebar));
+              if((mouse[0]>titikMana[0]) && (mouse[1]>titikMana[1])){
+                shapes[editedDotIdx[0]].dots[0] = vec2(shapes[editedDotIdx[0]].dots[0][0], shapes[editedDotIdx[0]].dots[0][1]+garisMin);
+                shapes[editedDotIdx[0]].dots[1] = vec2(shapes[editedDotIdx[0]].dots[1][0]+garisMin, shapes[editedDotIdx[0]].dots[1][1]+garisMin);
+                shapes[editedDotIdx[0]].dots[2] = vec2(shapes[editedDotIdx[0]].dots[2][0]+garisMin, shapes[editedDotIdx[0]].dots[2][1]);
+              }  
+              else if((mouse[0]<titikMana[0]) && (mouse[1]<titikMana[1])){
+                shapes[editedDotIdx[0]].dots[0] = vec2(shapes[editedDotIdx[0]].dots[0][0], shapes[editedDotIdx[0]].dots[0][1]-garisMin);
+                shapes[editedDotIdx[0]].dots[1] = vec2(shapes[editedDotIdx[0]].dots[1][0]-garisMin, shapes[editedDotIdx[0]].dots[1][1]-garisMin);
+                shapes[editedDotIdx[0]].dots[2] = vec2(shapes[editedDotIdx[0]].dots[2][0]-garisMin, shapes[editedDotIdx[0]].dots[2][1]);
+              }           
+            }
+            else if (titikMana == shapes[editedDotIdx[0]].dots[2]){             
+              var panjang = mouse[0] - titikMana[0];
+              var lebar = mouse[1] - titikMana[1];
+              var garisMin = Math.min(Math.abs(panjang), Math.abs(lebar));
+              if((mouse[0]>titikMana[0]) && (mouse[1]<titikMana[1])){               
+                shapes[editedDotIdx[0]].dots[1] = vec2(shapes[editedDotIdx[0]].dots[1][0]+garisMin, shapes[editedDotIdx[0]].dots[1][1]);
+                shapes[editedDotIdx[0]].dots[2] = vec2(shapes[editedDotIdx[0]].dots[2][0]+garisMin, shapes[editedDotIdx[0]].dots[2][1]-garisMin);
+                shapes[editedDotIdx[0]].dots[3] = vec2(shapes[editedDotIdx[0]].dots[3][0], shapes[editedDotIdx[0]].dots[3][1]-garisMin);
+              }  
+              else if((mouse[0]<titikMana[0]) && (mouse[1]>titikMana[1])){
+                shapes[editedDotIdx[0]].dots[1] = vec2(shapes[editedDotIdx[0]].dots[1][0]-garisMin, shapes[editedDotIdx[0]].dots[1][1]);
+                shapes[editedDotIdx[0]].dots[2] = vec2(shapes[editedDotIdx[0]].dots[2][0]-garisMin, shapes[editedDotIdx[0]].dots[2][1]+garisMin);
+                shapes[editedDotIdx[0]].dots[3] = vec2(shapes[editedDotIdx[0]].dots[3][0], shapes[editedDotIdx[0]].dots[3][1]+garisMin);
+              }           
+            }
+            else if (titikMana == shapes[editedDotIdx[0]].dots[3]){             
+              var panjang = mouse[0] - titikMana[0];
+              var lebar = mouse[1] - titikMana[1];
+              var garisMin = Math.min(Math.abs(panjang), Math.abs(lebar));
+              if((mouse[0]<titikMana[0]) && (mouse[1]<titikMana[1])){               
+                shapes[editedDotIdx[0]].dots[0] = vec2(shapes[editedDotIdx[0]].dots[0][0]-garisMin, shapes[editedDotIdx[0]].dots[0][1]);
+                shapes[editedDotIdx[0]].dots[2] = vec2(shapes[editedDotIdx[0]].dots[2][0], shapes[editedDotIdx[0]].dots[2][1]-garisMin);
+                shapes[editedDotIdx[0]].dots[3] = vec2(shapes[editedDotIdx[0]].dots[3][0]-garisMin, shapes[editedDotIdx[0]].dots[3][1]-garisMin);
+              }  
+              else if((mouse[0]>titikMana[0]) && (mouse[1]>titikMana[1])){
+                shapes[editedDotIdx[0]].dots[0] = vec2(shapes[editedDotIdx[0]].dots[0][0]+garisMin, shapes[editedDotIdx[0]].dots[0][1]);
+                shapes[editedDotIdx[0]].dots[2] = vec2(shapes[editedDotIdx[0]].dots[2][0], shapes[editedDotIdx[0]].dots[2][1]+garisMin);
+                shapes[editedDotIdx[0]].dots[3] = vec2(shapes[editedDotIdx[0]].dots[3][0]+garisMin, shapes[editedDotIdx[0]].dots[3][1]+garisMin);
+              }           
+            }
           }
         }
       }
