@@ -22,7 +22,6 @@ var colors = [
 var typeMap;
 
 // int
-var index;
 var numShapes;
 var numDots;
 var editedDotIdx;
@@ -43,7 +42,6 @@ var shapes = [];
 var mouseClicked = false;
 
 function clear() {
-  index = 0;
   numShapes = 0;
   numDots = [0];
   start = [0];
@@ -51,19 +49,12 @@ function clear() {
   shapes = [];
   editedDotIdx = vec2(-1, -1);
   mode = "draw";
+  document.getElementById("shapes").innerHTML = "";
   console.log("Canvas cleared!");
 }
 
 // load and save
-function readFile(inp) {
-  readFileContent(inp.files[0]).then(jsonData => {
-    shapes = JSON.parse(jsonData);
-    loadToBuffer();
-    numShapes = shapes.length;
-    console.log("File loaded!");
-    // TODO update HTML on All Shapes section
-  }).catch(error => console.log(error));
-}
+
 
 function loadToBuffer() {
   var startIdxTmp = 0;
@@ -78,7 +69,6 @@ function loadToBuffer() {
       startIdxTmp++;
     })
   })
-  index = startIdxTmp;
 }
 
 function readFileContent(file) {
@@ -170,6 +160,21 @@ window.onload = function init() {
     download(JSON.stringify(shapes, null, 2), document.getElementById("file-name").value + ".json", 'application/json');
   });
 
+  document.getElementById("data-file").onchange = readFile;
+
+  function readFile() {
+    readFileContent(this.files[0]).then(jsonData => {
+      shapes = JSON.parse(jsonData);
+      loadToBuffer();
+      shapes.forEach(shape => {
+        shape.color = vec4(shape.color);
+        shape.dots.forEach((dot, i) => shape.dots[i] = vec2(dot));
+        addShape(shape.type, shape.dots.length);
+      });
+      console.log("File loaded!");
+    }).catch(error => console.log(error));
+  }
+
   function addShape(type, n) {
     // create a div like this:
     // <div id="shape-0">
@@ -195,6 +200,19 @@ window.onload = function init() {
     colorSpan.setAttribute("id", "shape-color-" + numShapes);
     colorSpan.onchange = editColor;
 
+    function componentToHex(c) {
+      var hex = c.toString(16);
+      return hex.length == 1 ? "0" + hex : hex;
+    }
+    function rgbToHex(col) {
+      var [r,g,b] = col;
+      r = parseInt(r*255);
+      g = parseInt(g*255);
+      b = parseInt(b*255);
+      return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+    }
+    colorSpan.value = rgbToHex(shapes[numShapes].color);
+
     let typeP = document.createElement("div");
     typeP.appendChild(document.createTextNode("Type: "));
     typeP.appendChild(typeSpan);
@@ -210,7 +228,6 @@ window.onload = function init() {
       lengthP.appendChild(lengthSpan);
     }
     
-
     let colorP = document.createElement("div");
     colorP.appendChild(document.createTextNode("Color: "));
     colorP.appendChild(colorSpan);
@@ -250,7 +267,6 @@ window.onload = function init() {
     div.appendChild(document.createElement("br"));
     document.getElementById("shapes").appendChild(div);
     numShapes++;
-    index += 2;
   }
 
   function editLineLength(e) {
@@ -263,8 +279,6 @@ window.onload = function init() {
 
   function editSquareLength(e) {
     // asumsi titik pertama selalu fixed, hanya memindahkan titik kedua
-    console.log(e.target.value);
-    console.log(shapes[idx]);
     var idx = e.target.id.split("-").slice(-1)[0];
     let k = e.target.value / length(subtract(shapes[idx].dots[1], shapes[idx].dots[0]));
     var lineLengthVec = subtract(shapes[idx].dots[1], shapes[idx].dots[0]);
@@ -347,7 +361,6 @@ window.onload = function init() {
 
         else {
           if (distance(XY, shapes[numShapes].dots[0]) <= epsilon * 10) {
-            // if (inside(XY, shapes[numShapes].dots)) {
             addShape("polygon", shapes[numShapes].dots.length);
             console.log("Berhasil menambah polygon");
           } else {
@@ -355,8 +368,6 @@ window.onload = function init() {
           }
         }
       }
-    } else if (mode == "edit") {
-      // TODO if item clicked = sisi, bisa ubah panjang sisinya
     }
   });
 
@@ -432,15 +443,11 @@ window.onload = function init() {
         }
 
       } else if (mode == "edit") {
-        console.log(shapes[editedDotIdx[0]].type);
         if ((shapes[editedDotIdx[0]].type == "line") || (shapes[editedDotIdx[0]].type == "polygon")) {
           if (!(equal(editedDotIdx, vec2(-1, -1)))) {
             shapes[editedDotIdx[0]].dots[editedDotIdx[1]] = mouse;
           }
         } else if(shapes[editedDotIdx[0]].type == "square"){
-          //SQUARE
-          
-          console.log("MASUK SINI")
           if (!(equal(editedDotIdx, vec2(-1, -1)))) {
             var titikMana = shapes[editedDotIdx[0]].dots[editedDotIdx[1]];
             if (titikMana == shapes[editedDotIdx[0]].dots[0]){             
@@ -537,22 +544,6 @@ window.onload = function init() {
 
   render();
 }
-
-// function inside(point, vs) {
-//   var x = point[0], y = point[1];
-
-//   var inside = false;
-//   for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
-//     var xi = vs[i][0], yi = vs[i][1];
-//     var xj = vs[j][0], yj = vs[j][1];
-
-//     var intersect = ((yi > y) != (yj > y))
-//       && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-//     if (intersect) inside = !inside;
-//   }
-
-//   return inside;
-// };
 
 function render() {
   gl.clear(gl.COLOR_BUFFER_BIT);
