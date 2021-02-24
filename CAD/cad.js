@@ -204,7 +204,7 @@ window.onload = function init() {
     dotsP.appendChild(dotsSpan);
 
     let lengthP = document.createElement("div");
-    
+
     if(type != "polygon"){
       lengthP.appendChild(document.createTextNode("Length: "));
       lengthP.appendChild(lengthSpan);
@@ -432,11 +432,12 @@ window.onload = function init() {
         }
 
       } else if (mode == "edit") {
-        if ((typeValue == "line") || (typeValue == "polygon")) {
+        console.log(shapes[editedDotIdx[0]].type);
+        if ((shapes[editedDotIdx[0]].type == "line") || (shapes[editedDotIdx[0]].type == "polygon")) {
           if (!(equal(editedDotIdx, vec2(-1, -1)))) {
             shapes[editedDotIdx[0]].dots[editedDotIdx[1]] = mouse;
           }
-        } else if(typeValue == "square"){
+        } else if(shapes[editedDotIdx[0]].type == "square"){
           //SQUARE
           
           console.log("MASUK SINI")
