@@ -204,8 +204,12 @@ window.onload = function init() {
     dotsP.appendChild(dotsSpan);
 
     let lengthP = document.createElement("div");
-    lengthP.appendChild(document.createTextNode("Length: "));
-    lengthP.appendChild(lengthSpan);
+    
+    if(type != "polygon"){
+      lengthP.appendChild(document.createTextNode("Length: "));
+      lengthP.appendChild(lengthSpan);
+    }
+    
 
     let colorP = document.createElement("div");
     colorP.appendChild(document.createTextNode("Color: "));
@@ -235,8 +239,6 @@ window.onload = function init() {
     } else if (type == "polygon") {
       typeSpan.innerHTML = type;
       dotsSpan.innerHTML = shapes[numShapes].dots;
-      lengthSpan.value = length(subtract(shapes[numShapes].dots[0], shapes[numShapes].dots[1]));
-      lengthSpan.onchange = editLineLength;
 
       div.appendChild(typeP);
       div.appendChild(dotsP);
